@@ -1,2 +1,2 @@
 # AudioPlugins
-Selfmade Audio Plugins using C++ and JUICE Framework
+Selfmade Audio Plugins using C++ and JUCE Framework

@@ -95,6 +95,18 @@ void _3BandEQAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlo
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
+
+    juce::dsp::ProcessSpec spec;
+
+    spec.maximumBlockSize = samplesPerBlock;
+
+    spec.numChannels = 1;
+
+    spec.sampleRate = sampleRate;
+
+    //prepare both mono chains with the spec
+    leftChain.prepare(spec);
+    rightChain.prepare(spec);
 }
 
 void _3BandEQAudioProcessor::releaseResources()
@@ -144,18 +156,20 @@ void _3BandEQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
+    //make AudioBlock from buffer
+    juce::dsp::AudioBlock<float> block(buffer);
+    //get left channel
+    auto leftBlock = block.getSingleChannelBlock(0);
+    //get right channel
+    auto rightBlock = block.getSingleChannelBlock(1);
 
-        // ..do something to the data...
-    }
+    //context is sort of a wrapper around the block that the chain can use
+    juce::dsp::ProcessContextReplacing<float> leftContext(leftBlock);
+    juce::dsp::ProcessContextReplacing<float> rightContext(rightBlock);
+
+    //these contexts can then be passed to the mono filter chains to be processed
+    leftChain.process(leftContext);
+    rightChain.process(rightContext);
 }
 
 //==============================================================================
@@ -184,8 +198,7 @@ void _3BandEQAudioProcessor::setStateInformation (const void* data, int sizeInBy
     // whose contents will have been created by the getStateInformation() call.
 }
 
-juce::AudioProcessorValueTreeState::ParameterLayout
-    _3BandEQAudioProcessor::createParameterLayout()
+juce::AudioProcessorValueTreeState::ParameterLayout _3BandEQAudioProcessor::createParameterLayout()
 {
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
 

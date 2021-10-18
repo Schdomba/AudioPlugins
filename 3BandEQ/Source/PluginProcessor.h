@@ -57,6 +57,15 @@ public:
     juce::AudioProcessorValueTreeState apvts {*this, nullptr, "Parameters", createParameterLayout()};
 
 private:
+    //Filter with float
+    using Filter = juce::dsp::IIR::Filter<float>;
+    //CutFilter is 4 filters in a row
+    using CutFilter = juce::dsp::ProcessorChain<Filter, Filter, Filter, Filter>;
+    //MonoChain is Lowcut, Peak, Highcut in a row
+    using MonoChain = juce::dsp::ProcessorChain<CutFilter, Filter, CutFilter>;
+    //two MonoChains make the Stereo Chain
+    MonoChain leftChain, rightChain;
+
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (_3BandEQAudioProcessor)
 };

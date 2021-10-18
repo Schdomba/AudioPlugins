@@ -166,7 +166,8 @@ bool _3BandEQAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* _3BandEQAudioProcessor::createEditor()
 {
-    return new _3BandEQAudioProcessorEditor (*this);
+//    return new _3BandEQAudioProcessorEditor (*this);
+    return new juce::GenericAudioProcessorEditor(*this);
 }
 
 //==============================================================================
@@ -181,6 +182,60 @@ void _3BandEQAudioProcessor::setStateInformation (const void* data, int sizeInBy
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+}
+
+juce::AudioProcessorValueTreeState::ParameterLayout
+    _3BandEQAudioProcessor::createParameterLayout()
+{
+    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+
+    //slider (AudioParameterFloat) for low cut frequency, standard: 20 Hz
+    layout.add(std::make_unique<juce::AudioParameterFloat>("LowCut Freq",
+            "LowCut Freq",
+            juce::NormalisableRange<float>(20.f, 20000.f, 1.f, 1.f),
+            20.f));
+
+    //slider (AudioParameterFloat) for high cut frequency, standard: 20 kHz
+    layout.add(std::make_unique<juce::AudioParameterFloat>("HighCut Freq",
+            "HighCut Freq",
+            juce::NormalisableRange<float>(20.f, 20000.f, 1.f, 1.f),
+            20000.f));
+    
+    //slider (AudioParameterFloat) for peak frequency, standard: 750 Hz
+    layout.add(std::make_unique<juce::AudioParameterFloat>("Peak Freq",
+            "Peak Freq",
+            juce::NormalisableRange<float>(20.f, 20000.f, 1.f, 1.f),
+            750.f));
+            
+    //slider (AudioParameterFloat) for peak gain, standard: 0 dB
+    layout.add(std::make_unique<juce::AudioParameterFloat>("Peak Gain",
+            "Peak Gain",
+            juce::NormalisableRange<float>(-24.f, 24.f, 0.5f, 1.f),
+            0.0f));
+            
+    //slider (AudioParameterFloat) for peak quality (how narrow or wide the peak is), standard: 1
+    layout.add(std::make_unique<juce::AudioParameterFloat>("Peak Quality",
+            "Peak Quality",
+            juce::NormalisableRange<float>(0.1f, 10.f, 0.05f, 1.f),
+            1.f));
+
+    //choices for filter cut slope in dB per Octave are always multiples of 12
+    juce::StringArray stringArray;
+    for(int i = 0; i<4; ++i)
+    {
+        juce::String str;
+        str << (12 + i*12);
+        str << " db/Oct";
+        stringArray.add(str);
+    }
+
+    //choice (AudioParameterChoice) for different low cut slopes
+    layout.add(std::make_unique<juce::AudioParameterChoice>("LowCut Slope", "LowCut Slope", stringArray, 0));
+    //choice (AudioParameterChoice) for different high cut slopes
+    layout.add(std::make_unique<juce::AudioParameterChoice>("HighCut Slope", "HighCut Slope", stringArray, 0));
+
+
+    return layout;
 }
 
 //==============================================================================

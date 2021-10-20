@@ -24,7 +24,7 @@ struct ChainSettings
 {
   float peakFreq{0}, peakGainInDecibels{0}, peakQuality{1.f};
   float lowCutFreq{0}, highCutFreq{0};
-  int lowCutSlope{Slope::Slope_12}, highCutSlope{Slope::Slope_12};
+  Slope lowCutSlope{Slope::Slope_12}, highCutSlope{Slope::Slope_12};
 };
 //getter function for this struct
 ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& apvts);
@@ -97,6 +97,55 @@ private:
     using Coefficients = Filter::CoefficientsPtr;
     //helper function to update coefficients
     static void updateCoefficients(Coefficients& old, const Coefficients& replacements);
+    //template helper function to update cut filters
+    template<typename ChainType, typename CoefficientType>
+    void updateCutFilter(ChainType& leftLowCut,
+        const CoefficientType& cutCoefficients, 
+        const Slope& lowCutSlope)
+    {
+      //bypass all of the links in the chain
+      leftLowCut.template setBypassed<0>(true);
+      leftLowCut.template setBypassed<1>(true);
+      leftLowCut.template setBypassed<2>(true);
+      leftLowCut.template setBypassed<3>(true);
+
+      //because the number of coefficients varies based on the filter order, this switch statement is needed
+      switch(lowCutSlope)
+      {
+          //Slope 12 corresponds to 2nd order filter, so 1 set of coefficients
+          case Slope_12:
+              *leftLowCut.template get<0>().coefficients = *cutCoefficients[0];
+              leftLowCut.template setBypassed<0>(false);
+              break;
+          //Slope 24 corresponds to 4th order filter, so 2 sets of coefficients
+          case Slope_24:
+              *leftLowCut.template get<0>().coefficients = *cutCoefficients[0];
+              *leftLowCut.template get<1>().coefficients = *cutCoefficients[1];
+              leftLowCut.template setBypassed<0>(false);
+              leftLowCut.template setBypassed<1>(false);
+              break;
+          //Slope 36 corresponds to 6th order filter, so 3 sets of coefficients
+          case Slope_36:
+              *leftLowCut.template get<0>().coefficients = *cutCoefficients[0];
+              *leftLowCut.template get<1>().coefficients = *cutCoefficients[1];
+              *leftLowCut.template get<2>().coefficients = *cutCoefficients[2];
+              leftLowCut.template setBypassed<0>(false);
+              leftLowCut.template setBypassed<1>(false);
+              leftLowCut.template setBypassed<2>(false);
+              break;
+          //Slope 48 corresponds to 8th order filter, so 4 sets of coefficients
+          case Slope_48:
+              *leftLowCut.template get<0>().coefficients = *cutCoefficients[0];
+              *leftLowCut.template get<1>().coefficients = *cutCoefficients[1];
+              *leftLowCut.template get<2>().coefficients = *cutCoefficients[2];
+              *leftLowCut.template get<3>().coefficients = *cutCoefficients[3];
+              leftLowCut.template setBypassed<0>(false);
+              leftLowCut.template setBypassed<1>(false);
+              leftLowCut.template setBypassed<2>(false);
+              leftLowCut.template setBypassed<3>(false);
+              break;
+      }
+    }
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (_3BandEQAudioProcessor)
 };

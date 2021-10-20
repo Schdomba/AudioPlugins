@@ -113,104 +113,22 @@ void _3BandEQAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlo
     //update peak filter with chain settings
     updatePeakFilter(chainSettings);
 
-    
     //get coefficients for low cut filter
     //because the filter can be realized with different steepness levels (different orders), the designIIRHighpass... method has to be used
     //this function returns multiple coefficients for higher order filters (1 coefficient for 2nd order, 2 coefficients for 4th order, ...)
-    auto lowCutCoefficients = juce::dsp::FilterDesign<float>::designIIRHighpassHighOrderButterworthMethod(chainSettings.lowCutFreq,
-            sampleRate, 
+    auto cutCoefficients = juce::dsp::FilterDesign<float>::designIIRHighpassHighOrderButterworthMethod(chainSettings.lowCutFreq,
+            getSampleRate(), 
             2*(chainSettings.lowCutSlope+1));
 
     //get left low cut filter chain
     auto& leftLowCut = leftChain.get<ChainPositions::LowCut>();
-    //bypass all of the links in the chain
-    leftLowCut.setBypassed<0>(true);
-    leftLowCut.setBypassed<1>(true);
-    leftLowCut.setBypassed<2>(true);
-    leftLowCut.setBypassed<3>(true);
+    //update left lowcut filter chain
+    updateCutFilter(leftLowCut, cutCoefficients, chainSettings.lowCutSlope);
 
-    //because the number of coefficients varies based on the filter order, this switch statement is needed
-    switch(chainSettings.lowCutSlope)
-    {
-        //Slope 12 corresponds to 2nd order filter, so 1 set of coefficients
-        case Slope_12:
-            *leftLowCut.get<0>().coefficients = *lowCutCoefficients[0];
-            leftLowCut.setBypassed<0>(false);
-            break;
-        //Slope 24 corresponds to 4th order filter, so 2 sets of coefficients
-        case Slope_24:
-            *leftLowCut.get<0>().coefficients = *lowCutCoefficients[0];
-            *leftLowCut.get<1>().coefficients = *lowCutCoefficients[1];
-            leftLowCut.setBypassed<0>(false);
-            leftLowCut.setBypassed<1>(false);
-            break;
-        //Slope 36 corresponds to 6th order filter, so 3 sets of coefficients
-        case Slope_36:
-            *leftLowCut.get<0>().coefficients = *lowCutCoefficients[0];
-            *leftLowCut.get<1>().coefficients = *lowCutCoefficients[1];
-            *leftLowCut.get<2>().coefficients = *lowCutCoefficients[2];
-            leftLowCut.setBypassed<0>(false);
-            leftLowCut.setBypassed<1>(false);
-            leftLowCut.setBypassed<2>(false);
-            break;
-        //Slope 48 corresponds to 8th order filter, so 4 sets of coefficients
-        case Slope_48:
-            *leftLowCut.get<0>().coefficients = *lowCutCoefficients[0];
-            *leftLowCut.get<1>().coefficients = *lowCutCoefficients[1];
-            *leftLowCut.get<2>().coefficients = *lowCutCoefficients[2];
-            *leftLowCut.get<3>().coefficients = *lowCutCoefficients[3];
-            leftLowCut.setBypassed<0>(false);
-            leftLowCut.setBypassed<1>(false);
-            leftLowCut.setBypassed<2>(false);
-            leftLowCut.setBypassed<3>(false);
-            break;
-    }
-
-    
     //get right low cut filter chain
     auto& rightLowCut = rightChain.get<ChainPositions::LowCut>();
-    //bypass all of the links in the chain
-    rightLowCut.setBypassed<0>(true);
-    rightLowCut.setBypassed<1>(true);
-    rightLowCut.setBypassed<2>(true);
-    rightLowCut.setBypassed<3>(true);
-
-    //because the number of coefficients varies based on the filter order, this switch statement is needed
-    switch(chainSettings.lowCutSlope)
-    {
-        //Slope 12 corresponds to 2nd order filter, so 1 set of coefficients
-        case Slope_12:
-            *rightLowCut.get<0>().coefficients = *lowCutCoefficients[0];
-            rightLowCut.setBypassed<0>(false);
-            break;
-        //Slope 24 corresponds to 4th order filter, so 2 sets of coefficients
-        case Slope_24:
-            *rightLowCut.get<0>().coefficients = *lowCutCoefficients[0];
-            *rightLowCut.get<1>().coefficients = *lowCutCoefficients[1];
-            rightLowCut.setBypassed<0>(false);
-            rightLowCut.setBypassed<1>(false);
-            break;
-        //Slope 36 corresponds to 6th order filter, so 3 sets of coefficients
-        case Slope_36:
-            *rightLowCut.get<0>().coefficients = *lowCutCoefficients[0];
-            *rightLowCut.get<1>().coefficients = *lowCutCoefficients[1];
-            *rightLowCut.get<2>().coefficients = *lowCutCoefficients[2];
-            rightLowCut.setBypassed<0>(false);
-            rightLowCut.setBypassed<1>(false);
-            rightLowCut.setBypassed<2>(false);
-            break;
-        //Slope 48 corresponds to 8th order filter, so 4 sets of coefficients
-        case Slope_48:
-            *rightLowCut.get<0>().coefficients = *lowCutCoefficients[0];
-            *rightLowCut.get<1>().coefficients = *lowCutCoefficients[1];
-            *rightLowCut.get<2>().coefficients = *lowCutCoefficients[2];
-            *rightLowCut.get<3>().coefficients = *lowCutCoefficients[3];
-            rightLowCut.setBypassed<0>(false);
-            rightLowCut.setBypassed<1>(false);
-            rightLowCut.setBypassed<2>(false);
-            rightLowCut.setBypassed<3>(false);
-            break;
-    }
+    //update right lowcut filter chain
+    updateCutFilter(rightLowCut, cutCoefficients, chainSettings.lowCutSlope);
 
     //get coefficients for high cut filter
     
@@ -268,104 +186,23 @@ void _3BandEQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     auto chainSettings = getChainSettings(apvts);
     //update peak filter with chain settings
     updatePeakFilter(chainSettings);
-    
+
     //get coefficients for low cut filter
     //because the filter can be realized with different steepness levels (different orders), the designIIRHighpass... method has to be used
     //this function returns multiple coefficients for higher order filters (1 coefficient for 2nd order, 2 coefficients for 4th order, ...)
-    auto lowCutCoefficients = juce::dsp::FilterDesign<float>::designIIRHighpassHighOrderButterworthMethod(chainSettings.lowCutFreq,
+    auto cutCoefficients = juce::dsp::FilterDesign<float>::designIIRHighpassHighOrderButterworthMethod(chainSettings.lowCutFreq,
             getSampleRate(), 
             2*(chainSettings.lowCutSlope+1));
 
     //get left low cut filter chain
     auto& leftLowCut = leftChain.get<ChainPositions::LowCut>();
-    //bypass all of the links in the chain
-    leftLowCut.setBypassed<0>(true);
-    leftLowCut.setBypassed<1>(true);
-    leftLowCut.setBypassed<2>(true);
-    leftLowCut.setBypassed<3>(true);
+    //update left lowcut filter chain
+    updateCutFilter(leftLowCut, cutCoefficients, chainSettings.lowCutSlope);
 
-    //because the number of coefficients varies based on the filter order, this switch statement is needed
-    switch(chainSettings.lowCutSlope)
-    {
-        //Slope 12 corresponds to 2nd order filter, so 1 set of coefficients
-        case Slope_12:
-            *leftLowCut.get<0>().coefficients = *lowCutCoefficients[0];
-            leftLowCut.setBypassed<0>(false);
-            break;
-        //Slope 24 corresponds to 4th order filter, so 2 sets of coefficients
-        case Slope_24:
-            *leftLowCut.get<0>().coefficients = *lowCutCoefficients[0];
-            *leftLowCut.get<1>().coefficients = *lowCutCoefficients[1];
-            leftLowCut.setBypassed<0>(false);
-            leftLowCut.setBypassed<1>(false);
-            break;
-        //Slope 36 corresponds to 6th order filter, so 3 sets of coefficients
-        case Slope_36:
-            *leftLowCut.get<0>().coefficients = *lowCutCoefficients[0];
-            *leftLowCut.get<1>().coefficients = *lowCutCoefficients[1];
-            *leftLowCut.get<2>().coefficients = *lowCutCoefficients[2];
-            leftLowCut.setBypassed<0>(false);
-            leftLowCut.setBypassed<1>(false);
-            leftLowCut.setBypassed<2>(false);
-            break;
-        //Slope 48 corresponds to 8th order filter, so 4 sets of coefficients
-        case Slope_48:
-            *leftLowCut.get<0>().coefficients = *lowCutCoefficients[0];
-            *leftLowCut.get<1>().coefficients = *lowCutCoefficients[1];
-            *leftLowCut.get<2>().coefficients = *lowCutCoefficients[2];
-            *leftLowCut.get<3>().coefficients = *lowCutCoefficients[3];
-            leftLowCut.setBypassed<0>(false);
-            leftLowCut.setBypassed<1>(false);
-            leftLowCut.setBypassed<2>(false);
-            leftLowCut.setBypassed<3>(false);
-            break;
-    }
-
-    
     //get right low cut filter chain
     auto& rightLowCut = rightChain.get<ChainPositions::LowCut>();
-    //bypass all of the links in the chain
-    rightLowCut.setBypassed<0>(true);
-    rightLowCut.setBypassed<1>(true);
-    rightLowCut.setBypassed<2>(true);
-    rightLowCut.setBypassed<3>(true);
-
-    //because the number of coefficients varies based on the filter order, this switch statement is needed
-    switch(chainSettings.lowCutSlope)
-    {
-        //Slope 12 corresponds to 2nd order filter, so 1 set of coefficients
-        case Slope_12:
-            *rightLowCut.get<0>().coefficients = *lowCutCoefficients[0];
-            rightLowCut.setBypassed<0>(false);
-            break;
-        //Slope 24 corresponds to 4th order filter, so 2 sets of coefficients
-        case Slope_24:
-            *rightLowCut.get<0>().coefficients = *lowCutCoefficients[0];
-            *rightLowCut.get<1>().coefficients = *lowCutCoefficients[1];
-            rightLowCut.setBypassed<0>(false);
-            rightLowCut.setBypassed<1>(false);
-            break;
-        //Slope 36 corresponds to 6th order filter, so 3 sets of coefficients
-        case Slope_36:
-            *rightLowCut.get<0>().coefficients = *lowCutCoefficients[0];
-            *rightLowCut.get<1>().coefficients = *lowCutCoefficients[1];
-            *rightLowCut.get<2>().coefficients = *lowCutCoefficients[2];
-            rightLowCut.setBypassed<0>(false);
-            rightLowCut.setBypassed<1>(false);
-            rightLowCut.setBypassed<2>(false);
-            break;
-        //Slope 48 corresponds to 8th order filter, so 4 sets of coefficients
-        case Slope_48:
-            *rightLowCut.get<0>().coefficients = *lowCutCoefficients[0];
-            *rightLowCut.get<1>().coefficients = *lowCutCoefficients[1];
-            *rightLowCut.get<2>().coefficients = *lowCutCoefficients[2];
-            *rightLowCut.get<3>().coefficients = *lowCutCoefficients[3];
-            rightLowCut.setBypassed<0>(false);
-            rightLowCut.setBypassed<1>(false);
-            rightLowCut.setBypassed<2>(false);
-            rightLowCut.setBypassed<3>(false);
-            break;
-    }
+    //update right lowcut filter chain
+    updateCutFilter(rightLowCut, cutCoefficients, chainSettings.lowCutSlope);
 
 
     //----------run audio through the chain

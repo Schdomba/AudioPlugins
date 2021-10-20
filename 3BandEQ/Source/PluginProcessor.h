@@ -97,53 +97,45 @@ private:
     using Coefficients = Filter::CoefficientsPtr;
     //helper function to update coefficients
     static void updateCoefficients(Coefficients& old, const Coefficients& replacements);
+
+    //helper function to update cut filter coefficients
+    template<int Index, typename ChainType, typename CoefficientType>
+    void update(ChainType& chain, const CoefficientType& coefficients)
+    {
+      updateCoefficients(chain.template get<Index>().coefficients, coefficients[Index]);
+      chain.template setBypassed<Index>(false);
+    }
     //template helper function to update cut filters
     template<typename ChainType, typename CoefficientType>
-    void updateCutFilter(ChainType& leftLowCut,
-        const CoefficientType& cutCoefficients, 
-        const Slope& lowCutSlope)
+    void updateCutFilter(ChainType& chain,
+        const CoefficientType& coefficients, 
+        const Slope& slope)
     {
       //bypass all of the links in the chain
-      leftLowCut.template setBypassed<0>(true);
-      leftLowCut.template setBypassed<1>(true);
-      leftLowCut.template setBypassed<2>(true);
-      leftLowCut.template setBypassed<3>(true);
+      chain.template setBypassed<0>(true);
+      chain.template setBypassed<1>(true);
+      chain.template setBypassed<2>(true);
+      chain.template setBypassed<3>(true);
 
       //because the number of coefficients varies based on the filter order, this switch statement is needed
-      switch(lowCutSlope)
+      switch(slope)
       {
-          //Slope 12 corresponds to 2nd order filter, so 1 set of coefficients
-          case Slope_12:
-              *leftLowCut.template get<0>().coefficients = *cutCoefficients[0];
-              leftLowCut.template setBypassed<0>(false);
-              break;
-          //Slope 24 corresponds to 4th order filter, so 2 sets of coefficients
-          case Slope_24:
-              *leftLowCut.template get<0>().coefficients = *cutCoefficients[0];
-              *leftLowCut.template get<1>().coefficients = *cutCoefficients[1];
-              leftLowCut.template setBypassed<0>(false);
-              leftLowCut.template setBypassed<1>(false);
-              break;
-          //Slope 36 corresponds to 6th order filter, so 3 sets of coefficients
-          case Slope_36:
-              *leftLowCut.template get<0>().coefficients = *cutCoefficients[0];
-              *leftLowCut.template get<1>().coefficients = *cutCoefficients[1];
-              *leftLowCut.template get<2>().coefficients = *cutCoefficients[2];
-              leftLowCut.template setBypassed<0>(false);
-              leftLowCut.template setBypassed<1>(false);
-              leftLowCut.template setBypassed<2>(false);
-              break;
-          //Slope 48 corresponds to 8th order filter, so 4 sets of coefficients
           case Slope_48:
-              *leftLowCut.template get<0>().coefficients = *cutCoefficients[0];
-              *leftLowCut.template get<1>().coefficients = *cutCoefficients[1];
-              *leftLowCut.template get<2>().coefficients = *cutCoefficients[2];
-              *leftLowCut.template get<3>().coefficients = *cutCoefficients[3];
-              leftLowCut.template setBypassed<0>(false);
-              leftLowCut.template setBypassed<1>(false);
-              leftLowCut.template setBypassed<2>(false);
-              leftLowCut.template setBypassed<3>(false);
-              break;
+          {
+            update<3>(chain, coefficients);
+          }
+          case Slope_36:
+          {
+            update<2>(chain, coefficients);
+          }
+          case Slope_24:
+          {
+            update<1>(chain, coefficients);
+          }
+          case Slope_12:
+          {
+            update<0>(chain, coefficients);
+          }
       }
     }
     //==============================================================================

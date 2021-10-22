@@ -14,15 +14,6 @@
 //==============================================================================
 /**
 */
-//struct for rotary sliders
-struct CustomRotarySlider : juce::Slider
-{
-  CustomRotarySlider() : juce::Slider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag,
-                                      juce::Slider::TextEntryBoxPosition::NoTextBox)
-  {
-    
-  }
-};
 //struct for linear horizontal sliders
 struct CustomLinearHSlider : juce::Slider
 {
@@ -83,16 +74,14 @@ private:
     // access the processor object that created it.
     _3BandEQAudioProcessor& audioProcessor;
 
-    //all the rotary sliders
-    CustomRotarySlider peakGainSlider,
-    peakQualitySlider;
-
     //all the linear sliders
     CustomLinearHSlider peakFreqSlider,
     lowCutFreqSlider,
     highCutFreqSlider;
     CustomLinearVSlider lowCutSlopeSlider,
-    highCutSlopeSlider;
+    highCutSlopeSlider,
+    peakGainSlider,
+    peakQualitySlider;
 
     //labels
     juce::Label peakFreqLabel,

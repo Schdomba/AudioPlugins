@@ -217,7 +217,6 @@ void _3BandEQAudioProcessorEditor::resized()
     //set bounds for low and high cut controls inside of highCutArea and lowCutArea
     //gap on top and bottom
     lowCutArea.removeFromTop(lowCutArea.getHeight() * 0.2);
-    lowCutArea.removeFromBottom(lowCutArea.getHeight() * 0.1);
     //cut the sides so the label is right on top of the control
     lowCutArea.removeFromLeft(lowCutArea.getWidth() * 0.3);
     lowCutArea.removeFromRight(lowCutArea.getWidth() * 0.33);
@@ -235,15 +234,12 @@ void _3BandEQAudioProcessorEditor::resized()
     //set bounds for peak filter controls (all inside the remaining bounds, which is basically the middle column)
     //gap on top
     bounds.removeFromTop(bounds.getHeight() * 0.2);
-    //cut the sides so the label is right on top of the control
-    bounds.removeFromLeft(bounds.getWidth() * 0.25);
-    bounds.removeFromRight(bounds.getWidth() * 0.33);
-    //peakGainSlider is in the middle third (removing 0.5 from the remaining 0.66)
-    peakGainSlider.setBounds(bounds.removeFromTop(bounds.getHeight() * 0.5));
-    setupSlider(peakGainSlider, peakGainLabel, " dB", "peak gain", true);
-    //peakQualitySlider is on the bottom third (the remaining 0.33)
+    //peakGainSlider is left
+    peakGainSlider.setBounds(bounds.removeFromLeft(bounds.getWidth() * 0.5));
+    setupSlider(peakGainSlider, peakGainLabel, " dB", "peak gain", false);
+    //peakQualitySlider right
     peakQualitySlider.setBounds(bounds);
-    setupSlider(peakQualitySlider, peakQualityLabel, " ", "peak Q", true);
+    setupSlider(peakQualitySlider, peakQualityLabel, " ", "peak Q", false);
 }
 
 std::vector<juce::Component*> _3BandEQAudioProcessorEditor::getComps()

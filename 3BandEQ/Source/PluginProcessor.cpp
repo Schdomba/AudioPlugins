@@ -259,11 +259,7 @@ void updateCoefficients(Coefficients &old, const Coefficients &replacements)
 void _3BandEQAudioProcessor::updateLowCutFilters(const ChainSettings& chainSettings)
 {
     //get coefficients for low cut filter
-    //because the filter can be realized with different steepness levels (different orders), the designIIRHighpass... method has to be used
-    //this function returns multiple coefficients for higher order filters (1 coefficient for 2nd order, 2 coefficients for 4th order, ...)
-    auto cutCoefficients = juce::dsp::FilterDesign<float>::designIIRHighpassHighOrderButterworthMethod(chainSettings.lowCutFreq,
-            getSampleRate(), 
-            2*(chainSettings.lowCutSlope+1));
+    auto cutCoefficients = makeLowCutFilter(chainSettings, getSampleRate());
 
     //get left low cut filter chain
     auto& leftLowCut = leftChain.get<ChainPositions::LowCut>();
@@ -278,9 +274,7 @@ void _3BandEQAudioProcessor::updateLowCutFilters(const ChainSettings& chainSetti
 void _3BandEQAudioProcessor::updateHighCutFilters(const ChainSettings& chainSettings)
 {
     //get coefficients for high cut filter
-    auto cutCoefficients = juce::dsp::FilterDesign<float>::designIIRLowpassHighOrderButterworthMethod(chainSettings.highCutFreq,
-            getSampleRate(), 
-            2*(chainSettings.highCutSlope+1));
+    auto cutCoefficients = makeHighCutFilter(chainSettings, getSampleRate());
 
     //get left high cut filter chain
     auto& leftHighCut = leftChain.get<ChainPositions::HighCut>();

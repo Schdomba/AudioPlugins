@@ -29,12 +29,30 @@ _3BandEQAudioProcessorEditor::_3BandEQAudioProcessorEditor (_3BandEQAudioProcess
       addAndMakeVisible(comp);
     }
 
+    //get all the parameters
+    const auto& params = audioProcessor.getParameters();
+    //set up listener to parameter changes
+    for( auto param : params )
+    {
+      param->addListener(this);
+    }
+
+    //start Timer for repainting (60 Hz refresh rate)
+    startTimerHz(60);
+
     //plugin window size
     setSize (600, 400);
 }
 
 _3BandEQAudioProcessorEditor::~_3BandEQAudioProcessorEditor()
 {
+    //get all the parameters
+    const auto& params = audioProcessor.getParameters();
+    //deregister listeners
+    for( auto param : params )
+    {
+      param->removeListener(this);
+    }
 }
 
 //==============================================================================
@@ -171,7 +189,11 @@ void _3BandEQAudioProcessorEditor::timerCallback()
   if( parametersChanged.compareAndSetBool(false, true))
   {
     //update the monoChain
+    auto chainSettings = getChainSettings(audioProcessor.apvts);
+    auto peakCoefficients = makePeakFilter(chainSettings, audioProcessor.getSampleRate());
+    updateCoefficients(monoChain.get<ChainPositions::Peak>().coefficients, peakCoefficients);
     //signal a repaint to draw new response curve
+    repaint();
   }
 }
 

@@ -46,8 +46,69 @@ enum ChainPositions
 using Coefficients = Filter::CoefficientsPtr;
 //helper function to update coefficients
 void updateCoefficients(Coefficients& old, const Coefficients& replacements);
-//function to make peak filter from chainSettings and sampleRate
+//function to make peak filter coefficients from chainSettings and sampleRate
 Coefficients makePeakFilter(const ChainSettings& chainSettings, double sampleRate);
+
+//helper function to update cut filter coefficients
+template<int Index, typename ChainType, typename CoefficientType>
+void update(ChainType& chain, const CoefficientType& coefficients)
+{
+  updateCoefficients(chain.template get<Index>().coefficients, coefficients[Index]);
+  chain.template setBypassed<Index>(false);
+}
+//template helper function to update cut filters
+template<typename ChainType, typename CoefficientType>
+void updateCutFilter(ChainType& chain,
+    const CoefficientType& coefficients, 
+    const Slope& slope)
+{
+  //bypass all of the links in the chain
+  chain.template setBypassed<0>(true);
+  chain.template setBypassed<1>(true);
+  chain.template setBypassed<2>(true);
+  chain.template setBypassed<3>(true);
+
+  //because the number of coefficients varies based on the filter order, this switch statement is needed
+  switch(slope)
+  {
+      case Slope_48:
+      {
+        update<3>(chain, coefficients);
+      }
+      case Slope_36:
+      {
+        update<2>(chain, coefficients);
+      }
+      case Slope_24:
+      {
+        update<1>(chain, coefficients);
+      }
+      case Slope_12:
+      {
+        update<0>(chain, coefficients);
+      }
+  }
+}
+
+//function to make low cut filter coefficients from chainSettings and sampleRate
+inline auto makeLowCutFilter(const ChainSettings& chainSettings, double sampleRate)
+{
+  //get coefficients for low cut filter
+  //because the filter can be realized with different steepness levels (different orders), the designIIRHighpass... method has to be used
+  //this function returns multiple coefficients for higher order filters (1 coefficient for 2nd order, 2 coefficients for 4th order, ...)
+  return juce::dsp::FilterDesign<float>::designIIRHighpassHighOrderButterworthMethod(chainSettings.lowCutFreq,
+          sampleRate, 
+          2*(chainSettings.lowCutSlope+1));
+}
+
+//function to make high cut filter coefficients from chainSettings and sampleRate
+inline auto makeHighCutFilter(const ChainSettings& chainSettings, double sampleRate)
+{
+    //get coefficients for high cut filter
+    return juce::dsp::FilterDesign<float>::designIIRLowpassHighOrderButterworthMethod(chainSettings.highCutFreq,
+            sampleRate, 
+            2*(chainSettings.highCutSlope+1));
+}
 
 //==============================================================================
 /**
@@ -100,47 +161,6 @@ private:
     MonoChain leftChain, rightChain;
     //function to update peak filter
     void updatePeakFilter(const ChainSettings& chainSettings);
-
-    //helper function to update cut filter coefficients
-    template<int Index, typename ChainType, typename CoefficientType>
-    void update(ChainType& chain, const CoefficientType& coefficients)
-    {
-      updateCoefficients(chain.template get<Index>().coefficients, coefficients[Index]);
-      chain.template setBypassed<Index>(false);
-    }
-    //template helper function to update cut filters
-    template<typename ChainType, typename CoefficientType>
-    void updateCutFilter(ChainType& chain,
-        const CoefficientType& coefficients, 
-        const Slope& slope)
-    {
-      //bypass all of the links in the chain
-      chain.template setBypassed<0>(true);
-      chain.template setBypassed<1>(true);
-      chain.template setBypassed<2>(true);
-      chain.template setBypassed<3>(true);
-
-      //because the number of coefficients varies based on the filter order, this switch statement is needed
-      switch(slope)
-      {
-          case Slope_48:
-          {
-            update<3>(chain, coefficients);
-          }
-          case Slope_36:
-          {
-            update<2>(chain, coefficients);
-          }
-          case Slope_24:
-          {
-            update<1>(chain, coefficients);
-          }
-          case Slope_12:
-          {
-            update<0>(chain, coefficients);
-          }
-      }
-    }
 
     //update low cut filters
     void updateLowCutFilters(const ChainSettings& chainSettings);

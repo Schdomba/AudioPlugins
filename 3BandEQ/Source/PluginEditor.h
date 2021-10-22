@@ -23,6 +23,24 @@ struct CustomRotarySlider : juce::Slider
     
   }
 };
+//struct for linear horizontal sliders
+struct CustomLinearHSlider : juce::Slider
+{
+  CustomLinearHSlider() : juce::Slider(juce::Slider::SliderStyle::LinearHorizontal,
+                                      juce::Slider::TextEntryBoxPosition::NoTextBox)
+  {
+    
+  }
+};
+//struct for linear vertical sliders
+struct CustomLinearVSlider : juce::Slider
+{
+  CustomLinearVSlider() : juce::Slider(juce::Slider::SliderStyle::LinearVertical,
+                                      juce::Slider::TextEntryBoxPosition::NoTextBox)
+  {
+    
+  }
+};
 
 //===============================ResponseCurveComponent===============================================
 //response curve gets its own component so painter can't draw out of bounds
@@ -66,12 +84,14 @@ private:
     _3BandEQAudioProcessor& audioProcessor;
 
     //all the rotary sliders
-    CustomRotarySlider peakFreqSlider,
-    peakGainSlider,
-    peakQualitySlider,
+    CustomRotarySlider peakGainSlider,
+    peakQualitySlider;
+
+    //all the linear sliders
+    CustomLinearHSlider peakFreqSlider,
     lowCutFreqSlider,
-    highCutFreqSlider,
-    lowCutSlopeSlider,
+    highCutFreqSlider;
+    CustomLinearVSlider lowCutSlopeSlider,
     highCutSlopeSlider;
 
     //instance of ResponseCurveComponent

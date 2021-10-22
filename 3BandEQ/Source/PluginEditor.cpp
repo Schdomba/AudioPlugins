@@ -195,24 +195,31 @@ void _3BandEQAudioProcessorEditor::resized()
     //make responseCurveComponent inside of this area
     responseCurveComponent.setBounds(responseArea);
 
+    //chop 0.33 from the top (of the remaining two thirds) for frequency controls
+    auto freqArea = bounds.removeFromTop(bounds.getHeight() * 0.33);
+    //low cut freq slider is on top
+    lowCutFreqSlider.setBounds(freqArea.removeFromTop(freqArea.getHeight() * 0.33));
+    //peak freq slider in the middle
+    peakFreqSlider.setBounds(freqArea.removeFromTop(freqArea.getHeight() * 0.5));
+    //high cut freq slider on the bottom
+    highCutFreqSlider.setBounds(freqArea);
+
     //chop 0.33 from the left of bounds for low Cut controls
     auto lowCutArea = bounds.removeFromLeft(bounds.getWidth() * 0.33);
     //chop 0.5 from the right of the remaining 0.66 of bounds for high cut controls
     auto highCutArea = bounds.removeFromRight(bounds.getWidth() * 0.5);
 
     //set bounds for low and high cut controls inside of highCutArea and lowCutArea
-    //top 0.66 are for freq slider
-    lowCutFreqSlider.setBounds(lowCutArea.removeFromTop(bounds.getHeight() * 0.66));
-    //bottom 0.33 are for slope slider
+    //middle 0.33 are for slope slider
+    lowCutArea.removeFromTop(lowCutArea.getHeight() * 0.1);
+    lowCutArea.removeFromBottom(lowCutArea.getHeight() * 0.1);
     lowCutSlopeSlider.setBounds(lowCutArea);
-    //top 0.66 are for freq slider
-    highCutFreqSlider.setBounds(highCutArea.removeFromTop(bounds.getHeight() * 0.66));
-    //bottom 0.33 are for slope slider
+    //middle 0.33 are for slope slider
+    highCutArea.removeFromTop(highCutArea.getHeight() * 0.1);
+    highCutArea.removeFromBottom(highCutArea.getHeight() * 0.1);
     highCutSlopeSlider.setBounds(highCutArea);
 
     //set bounds for peak filter controls (all inside the remaining bounds, which is basically the middle column)
-    //peakFreqSlilder is in the top third
-    peakFreqSlider.setBounds(bounds.removeFromTop(bounds.getHeight() * 0.33));
     //peakGainSlider is in the middle third (removing 0.5 from the remaining 0.66)
     peakGainSlider.setBounds(bounds.removeFromTop(bounds.getHeight() * 0.5));
     //peakQualitySlider is on the bottom third (the remaining 0.33)

@@ -191,7 +191,14 @@ void _3BandEQAudioProcessorEditor::timerCallback()
     //update the monoChain
     auto chainSettings = getChainSettings(audioProcessor.apvts);
     auto peakCoefficients = makePeakFilter(chainSettings, audioProcessor.getSampleRate());
+    auto lowCutCoefficients = makeLowCutFilter(chainSettings, audioProcessor.getSampleRate());
+    auto highCutCoefficients = makeHighCutFilter(chainSettings, audioProcessor.getSampleRate());
+
     updateCoefficients(monoChain.get<ChainPositions::Peak>().coefficients, peakCoefficients);
+    updateCutFilter(monoChain.get<ChainPositions::LowCut>(), lowCutCoefficients, chainSettings.lowCutSlope);
+    updateCutFilter(monoChain.get<ChainPositions::HighCut>(), highCutCoefficients, chainSettings.highCutSlope);
+
+
     //signal a repaint to draw new response curve
     repaint();
   }

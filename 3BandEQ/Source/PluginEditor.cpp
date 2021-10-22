@@ -139,7 +139,7 @@ void ResponseCurveComponent::paint (juce::Graphics& g)
     }
 
     //draw boundary box
-    g.setColour(Colours::orange);
+    g.setColour(getLookAndFeel().findColour (juce::Slider::thumbColourId));
     g.drawRoundedRectangle(responseArea.toFloat(), 4.f, 1.f);
 
     //draw response curve
@@ -197,12 +197,17 @@ void _3BandEQAudioProcessorEditor::resized()
 
     //chop 0.33 from the top (of the remaining two thirds) for frequency controls
     auto freqArea = bounds.removeFromTop(bounds.getHeight() * 0.33);
+    //chop 0.2 from the left of this area to display texts
+    freqArea.removeFromLeft(freqArea.getWidth() * 0.1);
     //low cut freq slider is on top
     lowCutFreqSlider.setBounds(freqArea.removeFromTop(freqArea.getHeight() * 0.33));
+    setupSlider(lowCutFreqSlider, lowCutFreqLabel, " Hz", "low cut f", true);
     //peak freq slider in the middle
     peakFreqSlider.setBounds(freqArea.removeFromTop(freqArea.getHeight() * 0.5));
+    setupSlider(peakFreqSlider, peakFreqLabel, " Hz", "peak f", true);
     //high cut freq slider on the bottom
     highCutFreqSlider.setBounds(freqArea);
+    setupSlider(highCutFreqSlider, highCutFreqLabel, " Hz", "high cut f", true);
 
     //chop 0.33 from the left of bounds for low Cut controls
     auto lowCutArea = bounds.removeFromLeft(bounds.getWidth() * 0.33);
@@ -210,20 +215,35 @@ void _3BandEQAudioProcessorEditor::resized()
     auto highCutArea = bounds.removeFromRight(bounds.getWidth() * 0.5);
 
     //set bounds for low and high cut controls inside of highCutArea and lowCutArea
-    //middle 0.33 are for slope slider
-    lowCutArea.removeFromTop(lowCutArea.getHeight() * 0.1);
+    //gap on top and bottom
+    lowCutArea.removeFromTop(lowCutArea.getHeight() * 0.2);
     lowCutArea.removeFromBottom(lowCutArea.getHeight() * 0.1);
+    //cut the sides so the label is right on top of the control
+    lowCutArea.removeFromLeft(lowCutArea.getWidth() * 0.3);
+    lowCutArea.removeFromRight(lowCutArea.getWidth() * 0.33);
     lowCutSlopeSlider.setBounds(lowCutArea);
+    setupSlider(lowCutSlopeSlider, lowCutSlopeLabel, " dB/Oct", "low cut slope", false);
     //middle 0.33 are for slope slider
-    highCutArea.removeFromTop(highCutArea.getHeight() * 0.1);
+    highCutArea.removeFromTop(highCutArea.getHeight() * 0.2);
     highCutArea.removeFromBottom(highCutArea.getHeight() * 0.1);
+    //cut the sides so the label is right on top of the control
+    highCutArea.removeFromLeft(highCutArea.getWidth() * 0.3);
+    highCutArea.removeFromRight(highCutArea.getWidth() * 0.33);
     highCutSlopeSlider.setBounds(highCutArea);
+    setupSlider(highCutSlopeSlider, highCutSlopeLabel, " dB/Oct", "high cut slope", false);
 
     //set bounds for peak filter controls (all inside the remaining bounds, which is basically the middle column)
+    //gap on top
+    bounds.removeFromTop(bounds.getHeight() * 0.2);
+    //cut the sides so the label is right on top of the control
+    bounds.removeFromLeft(bounds.getWidth() * 0.25);
+    bounds.removeFromRight(bounds.getWidth() * 0.33);
     //peakGainSlider is in the middle third (removing 0.5 from the remaining 0.66)
     peakGainSlider.setBounds(bounds.removeFromTop(bounds.getHeight() * 0.5));
+    setupSlider(peakGainSlider, peakGainLabel, " dB", "peak gain", true);
     //peakQualitySlider is on the bottom third (the remaining 0.33)
     peakQualitySlider.setBounds(bounds);
+    setupSlider(peakQualitySlider, peakQualityLabel, " ", "peak Q", true);
 }
 
 std::vector<juce::Component*> _3BandEQAudioProcessorEditor::getComps()
@@ -237,6 +257,20 @@ std::vector<juce::Component*> _3BandEQAudioProcessorEditor::getComps()
     &highCutFreqSlider,
     &lowCutSlopeSlider,
     &highCutSlopeSlider,
-    &responseCurveComponent
+    &responseCurveComponent,
+    &peakFreqLabel,
+    &peakGainLabel,
+    &peakQualityLabel,
+    &lowCutFreqLabel,
+    &highCutFreqLabel,
+    &lowCutSlopeLabel,
+    &highCutSlopeLabel
   };
+}
+
+void _3BandEQAudioProcessorEditor::setupSlider(juce::Slider& slider, juce::Label& label, juce::String valueSuffix, juce::String text, bool onLeft)
+{
+    slider.setTextValueSuffix(valueSuffix);
+    label.setText(text, juce::dontSendNotification);
+    label.attachToComponent (&slider, onLeft);
 }

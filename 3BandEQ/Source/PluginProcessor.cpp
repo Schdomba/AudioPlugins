@@ -336,7 +336,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout _3BandEQAudioProcessor::crea
     {
         juce::String str;
         str << (12 + i*12);
-        str << " db/Oct";
         stringArray.add(str);
     }
 

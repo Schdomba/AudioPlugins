@@ -68,8 +68,10 @@ void ResponseCurveComponent::paint (juce::Graphics& g)
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
 
+    g.drawImage(background, getLocalBounds().toFloat());
+
     //bounding box
-    auto responseArea = getLocalBounds();
+    auto responseArea = getAnalysisArea();
     //width of response curve area
     auto w = responseArea.getWidth();
 
@@ -140,11 +142,98 @@ void ResponseCurveComponent::paint (juce::Graphics& g)
 
     //draw boundary box
     g.setColour(getLookAndFeel().findColour (juce::Slider::thumbColourId));
-    g.drawRoundedRectangle(responseArea.toFloat(), 4.f, 1.f);
+    g.drawRoundedRectangle(getRenderArea().toFloat(), 4.f, 1.f);
 
     //draw response curve
     g.setColour(Colours::white);
     g.strokePath(responseCurve, PathStrokeType(2.f));
+}
+
+void ResponseCurveComponent::resized()
+{
+  using namespace juce;
+  //make background image
+  background = Image(Image::PixelFormat::RGB, getWidth(), getHeight(), true);
+  //get graphics
+  Graphics g(background);
+  //set colur to dimgrey
+  g.setColour(Colours::dimgrey);
+
+  //array with all frequencies to draw lines at
+  Array<float> freqs 
+  {
+    20, 30, 40, 50, 100,
+    200, 300, 400, 500, 1000,
+    2000, 3000, 4000, 5000, 10000,
+    20000
+  };
+
+  //get render area information
+  auto renderArea = getAnalysisArea();
+  auto left = renderArea.getX();
+  auto right = renderArea.getRight();
+  auto top = renderArea.getY();
+  auto bottom = renderArea.getBottom();
+  auto width = renderArea.getWidth();
+
+  //array of x positions
+  Array<float> xs;
+  for( auto f : freqs )
+  {
+    //map frequency to normalized position
+    auto normX = mapFromLog10(f, 20.f, 20000.f);
+    //compute that to window x position
+    xs.add(left + width * normX);
+  }
+
+  //draw vertical lines (frequencies)
+  for( auto x : xs )
+  {
+    //draw vertical line for each x
+    g.drawVerticalLine(x, top, bottom);
+  }
+  
+  //array with all gain values to draw lines at
+  Array<float> gain 
+  {
+    -24, -12, 0, 12, 24
+  };
+  //draw horizontal lines (gain values)
+  for( auto gdB : gain )
+  {
+    //map gain to corresponding pixel
+    auto y = jmap(gdB, -24.f, 24.f, float(bottom), float(top));
+    //set color to white for 0dB line
+    g.setColour( gdB == 0.f ? Colours::white : Colours::dimgrey );
+    //draw line
+    g.drawHorizontalLine(y, left, right);
+  }
+
+  g.drawRect(getAnalysisArea());
+}
+
+juce::Rectangle<int> ResponseCurveComponent::getRenderArea()
+{
+  //get bounds
+  auto bounds = getLocalBounds();
+
+  //reduce it
+  bounds.removeFromTop(12);
+  bounds.removeFromBottom(2);
+  bounds.removeFromLeft(20);
+  bounds.removeFromRight(20);
+
+  return bounds;
+}
+
+juce::Rectangle<int> ResponseCurveComponent::getAnalysisArea()
+{
+  auto bounds = getRenderArea();
+
+  bounds.removeFromTop(4);
+  bounds.removeFromBottom(4);
+
+  return bounds;
 }
 
 //===================================_3BandEQAudioProcessorEditor===========================================

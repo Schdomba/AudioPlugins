@@ -162,9 +162,9 @@ void ResponseCurveComponent::resized()
   //array with all frequencies to draw lines at
   Array<float> freqs 
   {
-    20, 30, 40, 50, 100,
-    200, 300, 400, 500, 1000,
-    2000, 3000, 4000, 5000, 10000,
+    20, 50, 100,
+    200, 500, 1000,
+    2000, 5000, 10000,
     20000
   };
 
@@ -208,8 +208,40 @@ void ResponseCurveComponent::resized()
     //draw line
     g.drawHorizontalLine(y, left, right);
   }
+  //draw frequency labels
+  //basic setup
+  g.setColour(Colours::dimgrey);
+  const int fontHeight = 10;
+  g.setFont(fontHeight);
 
-  g.drawRect(getAnalysisArea());
+  //loop thorugh frequencies and xs to draw texts
+  for( int i = 0; i < freqs.size(); ++i)
+  {
+    auto f = freqs[i];
+    auto x = xs[i];
+    //add k (before Hz) to frequencies >= 1000 Hz and divide them by 1000 for the string
+    bool addK = false;
+    String str;
+    if( f > 999.f )
+    {
+      addK = true;
+      f /= 1000.f;
+    }
+    str << f;
+    if( addK )
+      str << "k";
+    str << "Hz";
+
+    //get string with to build rectangle around it
+    auto textWidth = g.getCurrentFont().getStringWidth(str);
+    Rectangle<int> r;
+    r.setSize(textWidth, fontHeight);
+    r.setCentre(x, 0);
+    r.setY(1);
+    //draw text
+    g.drawFittedText(str, r, juce::Justification::centred, 1);
+
+  }
 }
 
 juce::Rectangle<int> ResponseCurveComponent::getRenderArea()

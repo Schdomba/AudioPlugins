@@ -208,13 +208,13 @@ void ResponseCurveComponent::resized()
     //draw line
     g.drawHorizontalLine(y, left, right);
   }
-  //draw frequency labels
+  //-----------------draw labels------------------
   //basic setup
-  g.setColour(Colours::dimgrey);
+  g.setColour(Colours::white);
   const int fontHeight = 10;
   g.setFont(fontHeight);
 
-  //loop thorugh frequencies and xs to draw texts
+  //loop thorugh frequencies and xs to draw frequency labels
   for( int i = 0; i < freqs.size(); ++i)
   {
     auto f = freqs[i];
@@ -240,7 +240,27 @@ void ResponseCurveComponent::resized()
     r.setY(1);
     //draw text
     g.drawFittedText(str, r, juce::Justification::centred, 1);
+  }
+  //draw gain labels
+  for( auto gdB : gain )
+  {
+    //map gain to corresponding pixel
+    auto y = jmap(gdB, -24.f, 24.f, float(bottom), float(top));
+    //add + sign for gain values > 0
+    String str;
+    if( gdB > 0 )
+      str << "+";
+    str << gdB;
 
+    //get string with to build rectangle around it
+    auto textWidth = g.getCurrentFont().getStringWidth(str);
+    Rectangle<int> r;
+    r.setSize(textWidth, fontHeight);
+    r.setX(getWidth() - textWidth);
+    r.setCentre(r.getCentreX(), y);
+
+    //draw text
+    g.drawFittedText(str, r, juce::Justification::centred, 1);
   }
 }
 

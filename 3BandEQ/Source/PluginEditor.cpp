@@ -244,6 +244,7 @@ void ResponseCurveComponent::resized()
   //draw gain labels
   for( auto gdB : gain )
   {
+    //------on the right side: filter gain
     //map gain to corresponding pixel
     auto y = jmap(gdB, -24.f, 24.f, float(bottom), float(top));
     //add + sign for gain values > 0
@@ -259,6 +260,17 @@ void ResponseCurveComponent::resized()
     r.setX(getWidth() - textWidth);
     r.setCentre(r.getCentreX(), y);
 
+    //draw text
+    g.drawFittedText(str, r, juce::Justification::centred, 1);
+
+    //-------on the left side: analyzer gain
+    //create gain values from -48 to 0
+    str.clear();
+    str << (gdB - 24.f);
+    //construct rectangle
+    r.setX(1);
+    textWidth = g.getCurrentFont().getStringWidth(str);
+    r.setSize(textWidth, fontHeight);
     //draw text
     g.drawFittedText(str, r, juce::Justification::centred, 1);
   }
